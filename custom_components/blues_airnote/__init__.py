@@ -102,7 +102,7 @@ def _write_statistics(
                 has_sum=False,
                 name=display_name,
                 source=DOMAIN,
-                statistic_id=f"{DOMAIN}:{entry_id}_{field_key}",
+                statistic_id=f"{DOMAIN}:{entry_id.replace('-', '_')}_{field_key}",
                 unit_of_measurement=unit,
             ),
             [StatisticData(start=period_start, mean=value, state=value)],
