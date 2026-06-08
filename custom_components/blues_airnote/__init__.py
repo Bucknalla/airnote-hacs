@@ -52,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Data can arrive hours late when the Notecard uploads in batches, so
         # we backfill statistics at the actual measurement time rather than now.
         if when_ts := data.get("when"):
-            _write_statistics(hass, entry_id, body, utc_from_timestamp(float(when_ts)))
+            _write_statistics(hass, body, utc_from_timestamp(float(when_ts)))
 
     webhook.async_register(
         hass,
@@ -67,7 +67,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 def _write_statistics(
     hass: HomeAssistant,
-    entry_id: str,
     body: dict,
     measurement_time: datetime,
 ) -> None:
@@ -95,6 +94,8 @@ def _write_statistics(
             continue
         value = float(round(raw / 100, 1) if field_key == "pressure" else raw)
 
+        statistic_id = f"{DOMAIN}:{field_key}"
+        _LOGGER.debug("Writing statistic %s = %s at %s", statistic_id, value, period_start)
         async_add_external_statistics(
             hass,
             StatisticMetaData(
@@ -102,13 +103,13 @@ def _write_statistics(
                 has_sum=False,
                 name=display_name,
                 source=DOMAIN,
-                statistic_id=f"{DOMAIN}:{entry_id.replace('-', '_')}_{field_key}",
+                statistic_id=statistic_id,
                 unit_of_measurement=unit,
             ),
             [StatisticData(start=period_start, mean=value, state=value)],
         )
 
-    _LOGGER.debug("Backfilled statistics for entry %s at %s", entry_id, period_start)
+    _LOGGER.debug("Backfilled statistics at %s", period_start)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
