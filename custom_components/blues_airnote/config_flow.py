@@ -24,7 +24,7 @@ class BluesAirNoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             return self.async_create_entry(
-                title="AirNote",
+                title="Airnote",
                 data={CONF_WEBHOOK_ID: self._webhook_id},
             )
 

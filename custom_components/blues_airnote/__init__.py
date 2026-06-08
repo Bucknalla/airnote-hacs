@@ -17,13 +17,13 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR]
 
 # Numeric fields to backfill as external statistics, with (payload_key, unit, display_name).
-# Pressure is stored in Pa by the AirNote firmware; we convert to hPa on write.
+# Pressure is stored in Pa by the Airnote firmware; we convert to hPa on write.
 _STAT_FIELDS: tuple[tuple[str, str | None, str], ...] = (
-    ("aqi", None, "AirNote AQI"),
-    ("temperature", "°C", "AirNote Temperature"),
-    ("humidity", "%", "AirNote Humidity"),
-    ("pressure", "hPa", "AirNote Pressure"),
-    ("voltage", "V", "AirNote Voltage"),
+    ("aqi", None, "Airnote AQI"),
+    ("temperature", "°C", "Airnote Temperature"),
+    ("humidity", "%", "Airnote Humidity"),
+    ("pressure", "hPa", "Airnote Pressure"),
+    ("voltage", "V", "Airnote Voltage"),
 )
 
 
@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             data = await request.json()
         except Exception:
-            _LOGGER.debug("Received non-JSON or malformed payload on AirNote webhook")
+            _LOGGER.debug("Received non-JSON or malformed payload on Airnote webhook")
             return
 
         body = data.get("body", {})
@@ -57,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     webhook.async_register(
         hass,
         DOMAIN,
-        "Blues AirNote",
+        "Blues Airnote",
         entry.data[CONF_WEBHOOK_ID],
         _handle_webhook,
     )
@@ -82,10 +82,10 @@ def _write_statistics(
         _LOGGER.debug("Recorder not available; skipping historical statistics")
         return
 
-    # Floor to the 15-minute boundary so each AirNote sample (recorded every
+    # Floor to the 15-minute boundary so each Airnote sample (recorded every
     # 15 min) gets its own statistics slot.  Multiple readings in the same
     # 15-minute window would overwrite each other, but that shouldn't happen
-    # given the AirNote's fixed sample interval.
+    # given the Airnote's fixed sample interval.
     quarter = (measurement_time.minute // 15) * 15
     period_start = measurement_time.replace(minute=quarter, second=0, microsecond=0)
 

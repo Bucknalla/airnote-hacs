@@ -40,7 +40,7 @@ async def test_step_user_creates_entry(hass: HomeAssistant) -> None:
         result["flow_id"], user_input={}
     )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "AirNote"
+    assert result2["title"] == "Airnote"
     assert result2["data"][CONF_WEBHOOK_ID].startswith("blues_airnote_")
 
 

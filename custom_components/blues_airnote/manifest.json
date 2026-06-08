@@ -1,6 +1,6 @@
 {
   "domain": "blues_airnote",
-  "name": "Blues AirNote",
+  "name": "Blues Airnote",
   "codeowners": ["@alexbucknall"],
   "config_flow": true,
   "documentation": "https://github.com/Bucknalla/airnote-hacs",

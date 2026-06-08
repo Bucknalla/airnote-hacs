@@ -52,9 +52,9 @@ class AirNoteBinarySensor(RestoreEntity, BinarySensorEntity):
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
-            name="AirNote",
-            manufacturer="Blues Wireless",
-            model="AirNote",
+            name="Airnote",
+            manufacturer="Blues",
+            model="Airnote",
             configuration_url="https://airnote.blues.io",
         )
         self._entry_id = entry.entry_id

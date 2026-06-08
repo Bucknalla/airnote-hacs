@@ -1,16 +1,16 @@
-# Blues AirNote — Home Assistant Integration
+# Blues Airnote — Home Assistant Integration
 
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
 [![HA Version](https://img.shields.io/badge/Home%20Assistant-2024.1%2B-blue)](https://www.home-assistant.io)
 
-A Home Assistant integration for the [Blues AirNote](https://airnote.blues.io) air quality monitor, distributed via HACS.
+A Home Assistant integration for the [Blues Airnote](https://airnote.blues.io) air quality monitor, distributed via HACS.
 
-The integration registers a webhook endpoint inside Home Assistant. You paste the generated URL into the AirNote device configuration page — from that point, the AirNote pushes data directly to Home Assistant on every Notecard sync. No Notehub API credentials, no polling, no external dependencies.
+The integration registers a webhook endpoint inside Home Assistant. You paste the generated URL into the Airnote device configuration page — from that point, the Airnote pushes data directly to Home Assistant on every Notecard sync. No Notehub API credentials, no polling, no external dependencies.
 
 ## Prerequisites
 
 - A publicly accessible Home Assistant instance with an **external URL** configured (Settings → System → Network → Home Assistant URL)
-- A [Blues AirNote](https://airnote.blues.io) device
+- A [Blues Airnote](https://airnote.blues.io) device
 
 ## Installation
 
@@ -19,7 +19,7 @@ The integration registers a webhook endpoint inside Home Assistant. You paste th
 1. Open HACS in your Home Assistant instance.
 2. Go to **Integrations** → ⋮ → **Custom repositories**.
 3. Add `https://github.com/Bucknalla/airnote-hacs` with category **Integration**.
-4. Find **Blues AirNote** in the HACS integration list and install it.
+4. Find **Blues Airnote** in the HACS integration list and install it.
 5. Restart Home Assistant.
 
 ### Manual
@@ -28,21 +28,21 @@ Copy the `custom_components/blues_airnote/` directory into your HA configuration
 
 ## Setup
 
-1. Go to **Settings → Devices & Services → Add Integration** and search for **Blues AirNote**.
+1. Go to **Settings → Devices & Services → Add Integration** and search for **Blues Airnote**.
 2. The integration generates a unique webhook URL and displays it:
 
    ```
    https://your-ha/api/webhook/blues_airnote_<id>
    ```
 
-3. Paste this URL into your [AirNote device configuration page](https://airnote.blues.io).
+3. Paste this URL into your [Airnote device configuration page](https://airnote.blues.io).
 4. Click **Done** — the integration is now active.
 
-The AirNote will start pushing data to Home Assistant on its next Notecard sync. The integration needs no further configuration.
+The Airnote will start pushing data to Home Assistant on its next Notecard sync. The integration needs no further configuration.
 
 ## Entities
 
-All entities are grouped under a single **AirNote** device in Settings → Devices & Services.
+All entities are grouped under a single **Airnote** device in Settings → Devices & Services.
 
 | Entity | Class | Unit | Notes |
 |---|---|---|---|
@@ -56,7 +56,7 @@ All entities are grouped under a single **AirNote** device in Settings → Devic
 
 ## Historical data
 
-The AirNote samples every 15 minutes but uploads to Notehub in batches (typically every 6 hours). Each uploaded reading includes a `when` timestamp — the time it was actually measured on the device.
+The Airnote samples every 15 minutes but uploads to Notehub in batches (typically every 6 hours). Each uploaded reading includes a `when` timestamp — the time it was actually measured on the device.
 
 This integration uses that timestamp to backfill long-term statistics in Home Assistant's recorder at the correct measurement time, rather than the time HA received it. A 6-hour batch upload fills in 24 distinct 15-minute slots in the Statistics card — no data is lost.
 
@@ -65,7 +65,7 @@ To view historical data: **Developer Tools → Statistics** and search for `blue
 ## Troubleshooting
 
 **No entities appear after setup**
-The AirNote hasn't pushed data yet. Sensors become available after the first successful sync. You can confirm the webhook is reachable by sending a test payload:
+The Airnote hasn't pushed data yet. Sensors become available after the first successful sync. You can confirm the webhook is reachable by sending a test payload:
 
 ```bash
 curl -X POST "https://your-ha/api/webhook/blues_airnote_<id>" \
@@ -74,10 +74,10 @@ curl -X POST "https://your-ha/api/webhook/blues_airnote_<id>" \
 ```
 
 **"Integration not found" or setup fails**
-Ensure your HA instance has an external URL set in Settings → System → Network. The integration requires a publicly accessible URL so the AirNote can reach it.
+Ensure your HA instance has an external URL set in Settings → System → Network. The integration requires a publicly accessible URL so the Airnote can reach it.
 
 **Sensors show stale data**
-Check that the webhook URL in your [AirNote device configuration](https://airnote.blues.io) matches the URL shown during setup. Re-adding the integration generates a new webhook ID.
+Check that the webhook URL in your [Airnote device configuration](https://airnote.blues.io) matches the URL shown during setup. Re-adding the integration generates a new webhook ID.
 
 ## Development
 
