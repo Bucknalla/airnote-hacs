@@ -1,0 +1,14 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Blues AirNote",
+        "description": "Paste the URL below into your [AirNote device configuration page](https://airnote.blues.io):\n\n`{webhook_url}`\n\n**Note:** Your Home Assistant instance must be publicly accessible with an external URL configured (Settings → System → Network)."
+      }
+    },
+    "abort": {
+      "already_configured": "AirNote is already configured. Only one device is supported in v1.",
+      "no_url_available": "No external URL is configured for Home Assistant. Set one in Settings → System → Network before adding this integration."
+    }
+  }
+}

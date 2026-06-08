@@ -1,0 +1,10 @@
+{
+  "domain": "blues_airnote",
+  "name": "Blues AirNote",
+  "codeowners": ["@alexbucknall"],
+  "config_flow": true,
+  "documentation": "https://github.com/Bucknalla/airnote-hacs",
+  "iot_class": "cloud_push",
+  "requirements": [],
+  "version": "1.0.0"
+}
