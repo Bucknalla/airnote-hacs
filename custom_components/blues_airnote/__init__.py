@@ -81,12 +81,10 @@ def _write_statistics(
         _LOGGER.debug("Recorder not available; skipping historical statistics")
         return
 
-    # Floor to the 15-minute boundary so each Airnote sample (recorded every
-    # 15 min) gets its own statistics slot.  Multiple readings in the same
-    # 15-minute window would overwrite each other, but that shouldn't happen
-    # given the Airnote's fixed sample interval.
-    quarter = (measurement_time.minute // 15) * 15
-    period_start = measurement_time.replace(minute=quarter, second=0, microsecond=0)
+    # HA external statistics require hourly resolution (minute=0, second=0).
+    # Multiple Airnote readings within the same hour will be overwritten by
+    # the last one received; 4 readings/hour is the worst case.
+    period_start = measurement_time.replace(minute=0, second=0, microsecond=0)
 
     for field_key, unit, display_name in _STAT_FIELDS:
         raw = body.get(field_key)
