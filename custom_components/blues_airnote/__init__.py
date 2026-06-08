@@ -77,6 +77,12 @@ def _write_statistics(
             StatisticMetaData,
             async_add_external_statistics,
         )
+        try:
+            from homeassistant.components.recorder.statistics import (  # noqa: PLC0415
+                StatisticMeanType,
+            )
+        except ImportError:
+            StatisticMeanType = None
     except ImportError:
         _LOGGER.debug("Recorder not available; skipping historical statistics")
         return
@@ -99,6 +105,7 @@ def _write_statistics(
             StatisticMetaData(
                 has_mean=True,
                 has_sum=False,
+                **({"mean_type": StatisticMeanType.ARITHMETIC} if StatisticMeanType else {}),
                 name=display_name,
                 source=DOMAIN,
                 statistic_id=statistic_id,
