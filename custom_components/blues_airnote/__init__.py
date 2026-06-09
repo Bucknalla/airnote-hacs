@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from historical_sensor import HistoricalState
+from homeassistant_historical_sensor import HistoricalState
 from aiohttp.web import Request
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry

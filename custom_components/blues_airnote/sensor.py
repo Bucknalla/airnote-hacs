@@ -4,7 +4,7 @@ import logging
 from dataclasses import dataclass
 from typing import Any, Callable
 
-from historical_sensor import HistoricalSensor, HistoricalState
+from homeassistant_historical_sensor import HistoricalSensor, HistoricalState
 from homeassistant.components.recorder.statistics import StatisticMetaData
 from homeassistant.components.sensor import (
     RestoreSensor,
