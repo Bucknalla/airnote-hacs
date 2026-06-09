@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Callable
 
 from homeassistant_historical_sensor import HistoricalSensor, HistoricalState
@@ -125,7 +126,6 @@ class AirNoteHistoricalSensor(HistoricalSensor, SensorEntity):
     entity_description: AirNoteHistoricalSensorDescription
     _attr_has_entity_name = True
     _attr_should_poll = False
-    _attr_state = None
 
     def __init__(
         self, entry: ConfigEntry, description: AirNoteHistoricalSensorDescription
@@ -134,6 +134,14 @@ class AirNoteHistoricalSensor(HistoricalSensor, SensorEntity):
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
         self._attr_device_info = _device_info(entry)
         self._entry_id = entry.entry_id
+        self._latest_dt: datetime | None = None
+        self._attr_native_value: float | None = None
+
+    @property
+    def state(self) -> float | None:
+        # HistoricalSensor always returns None. Override to show the most
+        # recently received measurement so the sensor card is usable.
+        return self._attr_native_value
 
     @property
     def statistic_id(self) -> str:
@@ -179,6 +187,11 @@ class AirNoteHistoricalSensor(HistoricalSensor, SensorEntity):
         """Receive one backdated reading from the webhook handler."""
         self._attr_historical_states = [hist_state]
         await self.async_write_ha_historical_states()
+        # Keep the displayed state in sync with the most recent measurement.
+        if self._latest_dt is None or hist_state.dt > self._latest_dt:
+            self._latest_dt = hist_state.dt
+            self._attr_native_value = hist_state.state
+            self.async_write_ha_state()
 
 
 class AirNoteTextSensor(RestoreSensor, SensorEntity):

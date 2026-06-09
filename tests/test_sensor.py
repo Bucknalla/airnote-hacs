@@ -108,6 +108,19 @@ async def test_webhook_dispatches_historical_states(
     assert by_key["voltage"]._attr_historical_states[0].state == pytest.approx(3.718)
 
 
+async def test_numeric_sensors_show_latest_value(
+    hass: HomeAssistant, setup_integration
+) -> None:
+    """After a webhook, numeric sensors expose the most recent measurement as their state."""
+    await _fire_webhook(hass, setup_integration._webhook_handler, SAMPLE_BODY)
+
+    aqi_id = _entity_id(hass, "sensor", "aqi")
+    assert float(hass.states.get(aqi_id).state) == pytest.approx(42.0)
+
+    temp_id = _entity_id(hass, "sensor", "temperature")
+    assert float(hass.states.get(temp_id).state) == pytest.approx(21.5)
+
+
 async def test_pressure_converted_from_pa(
     hass: HomeAssistant, setup_integration
 ) -> None:
