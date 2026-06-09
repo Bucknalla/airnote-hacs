@@ -160,11 +160,8 @@ class AirNoteHistoricalSensor(HistoricalSensor, SensorEntity):
         self,
         hist_states: list[HistoricalState],
         *,
-        last: dict | None,
-    ):
-        # The library calls this; return empty list since we rely on the states
-        # written directly to the DB. Statistics aggregation is handled per-hour
-        # by the library's _async_write_statistic_data.
+        latest: dict | None = None,
+    ) -> list:
         return []
 
     def _friendly_name_internal(self) -> str | None:
