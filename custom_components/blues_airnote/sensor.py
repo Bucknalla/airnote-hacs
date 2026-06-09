@@ -140,16 +140,22 @@ class AirNoteHistoricalSensor(HistoricalSensor, SensorEntity):
         return f"{DOMAIN}:{self.entity_description.payload_key}"
 
     def get_statistic_metadata(self) -> StatisticMetaData:
+        unit = self.entity_description.native_unit_of_measurement
         meta: dict[str, Any] = {
             "has_mean": True,
             "has_sum": False,
             "name": self.name,
             "source": DOMAIN,
             "statistic_id": self.statistic_id,
-            "unit_of_measurement": self.entity_description.native_unit_of_measurement,
+            "unit_of_measurement": unit,
         }
         if StatisticMeanType is not None:
             meta["mean_type"] = StatisticMeanType.ARITHMETIC
+        try:
+            from homeassistant.components.recorder.statistics import UNIT_CLASSES  # noqa: PLC0415
+            meta["unit_class"] = UNIT_CLASSES.get(unit)
+        except ImportError:
+            pass
         return StatisticMetaData(**meta)
 
     async def async_update_historical(self) -> None:
