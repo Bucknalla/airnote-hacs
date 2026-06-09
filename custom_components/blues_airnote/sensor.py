@@ -167,6 +167,11 @@ class AirNoteHistoricalSensor(HistoricalSensor, SensorEntity):
         # by the library's _async_write_statistic_data.
         return []
 
+    def _friendly_name_internal(self) -> str | None:
+        # homeassistant_historical_sensor 2.0.0 patches.py calls this method,
+        # but it was removed in HA 2025.x. Shim it via the public .name property.
+        return self.name
+
     async def async_push_historical_state(self, hist_state: HistoricalState) -> None:
         """Receive one backdated reading from the webhook handler."""
         self._attr_historical_states = [hist_state]
