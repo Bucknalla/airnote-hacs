@@ -28,6 +28,16 @@ try:
 except ImportError:
     StatisticMeanType = None  # type: ignore[assignment]
 
+# Maps native_unit_of_measurement → HA unit_class for async_add_external_statistics.
+# Hardcoded to avoid depending on HA's internal UNIT_CLASSES dict.
+_UNIT_CLASS: dict[str | None, str] = {
+    "°C": "temperature",
+    "%": "unitless",
+    "hPa": "pressure",
+    "V": "voltage",
+    None: "unitless",
+}
+
 
 @dataclass(frozen=True, kw_only=True)
 class AirNoteHistoricalSensorDescription(SensorEntityDescription):
@@ -159,11 +169,7 @@ class AirNoteHistoricalSensor(HistoricalSensor, SensorEntity):
         }
         if StatisticMeanType is not None:
             meta["mean_type"] = StatisticMeanType.ARITHMETIC
-        try:
-            from homeassistant.components.recorder.statistics import UNIT_CLASSES  # noqa: PLC0415
-            meta["unit_class"] = UNIT_CLASSES.get(unit)
-        except ImportError:
-            pass
+        meta["unit_class"] = _UNIT_CLASS.get(unit)
         return StatisticMetaData(**meta)
 
     async def async_update_historical(self) -> None:
