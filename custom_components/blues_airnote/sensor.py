@@ -2,11 +2,8 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Any, Callable
 
-from homeassistant_historical_sensor import HistoricalSensor, HistoricalState
-from homeassistant.components.recorder.statistics import StatisticMetaData
 from homeassistant.components.sensor import (
     RestoreSensor,
     SensorDeviceClass,
@@ -23,41 +20,27 @@ from .const import DOMAIN, EVENT_DATA_RECEIVED
 
 _LOGGER = logging.getLogger(__name__)
 
-try:
-    from homeassistant.components.recorder.statistics import StatisticMeanType
-except ImportError:
-    StatisticMeanType = None  # type: ignore[assignment]
-
-# Maps native_unit_of_measurement → HA unit_class for async_add_external_statistics.
-# Hardcoded to avoid depending on HA's internal UNIT_CLASSES dict.
-_UNIT_CLASS: dict[str | None, str] = {
-    "°C": "temperature",
-    "%": "unitless",
-    "hPa": "pressure",
-    "V": "voltage",
-    None: "unitless",
-}
-
 
 @dataclass(frozen=True, kw_only=True)
-class AirNoteHistoricalSensorDescription(SensorEntityDescription):
+class AirNoteSensorEntityDescription(SensorEntityDescription):
     payload_key: str = ""
     transform: Callable[[Any], float] | None = None
 
 
-@dataclass(frozen=True, kw_only=True)
-class AirNoteTextSensorDescription(SensorEntityDescription):
-    payload_key: str = ""
-
-
-HISTORICAL_SENSOR_DESCRIPTIONS: tuple[AirNoteHistoricalSensorDescription, ...] = (
-    AirNoteHistoricalSensorDescription(
+SENSOR_DESCRIPTIONS: tuple[AirNoteSensorEntityDescription, ...] = (
+    AirNoteSensorEntityDescription(
         key="aqi",
         payload_key="aqi",
         name="AQI",
         device_class=SensorDeviceClass.AQI,
     ),
-    AirNoteHistoricalSensorDescription(
+    AirNoteSensorEntityDescription(
+        key="aqi_level",
+        payload_key="aqi_level",
+        name="AQI Level",
+        icon="mdi:air-filter",
+    ),
+    AirNoteSensorEntityDescription(
         key="temperature",
         payload_key="temperature",
         name="Temperature",
@@ -65,7 +48,7 @@ HISTORICAL_SENSOR_DESCRIPTIONS: tuple[AirNoteHistoricalSensorDescription, ...] =
         native_unit_of_measurement="°C",
         suggested_display_precision=1,
     ),
-    AirNoteHistoricalSensorDescription(
+    AirNoteSensorEntityDescription(
         key="humidity",
         payload_key="humidity",
         name="Humidity",
@@ -73,7 +56,7 @@ HISTORICAL_SENSOR_DESCRIPTIONS: tuple[AirNoteHistoricalSensorDescription, ...] =
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=1,
     ),
-    AirNoteHistoricalSensorDescription(
+    AirNoteSensorEntityDescription(
         key="pressure",
         payload_key="pressure",
         name="Pressure",
@@ -82,22 +65,13 @@ HISTORICAL_SENSOR_DESCRIPTIONS: tuple[AirNoteHistoricalSensorDescription, ...] =
         suggested_display_precision=0,
         transform=lambda v: round(v / 100, 0),
     ),
-    AirNoteHistoricalSensorDescription(
+    AirNoteSensorEntityDescription(
         key="voltage",
         payload_key="voltage",
         name="Voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement="V",
         suggested_display_precision=3,
-    ),
-)
-
-TEXT_SENSOR_DESCRIPTIONS: tuple[AirNoteTextSensorDescription, ...] = (
-    AirNoteTextSensorDescription(
-        key="aqi_level",
-        payload_key="aqi_level",
-        name="AQI Level",
-        icon="mdi:air-filter",
     ),
 )
 
@@ -117,97 +91,17 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    historical_sensors = [
-        AirNoteHistoricalSensor(entry, desc)
-        for desc in HISTORICAL_SENSOR_DESCRIPTIONS
-    ]
-    text_sensors = [AirNoteTextSensor(entry, desc) for desc in TEXT_SENSOR_DESCRIPTIONS]
-
-    hass.data.setdefault(DOMAIN, {}).setdefault(entry.entry_id, {})["sensors"] = (
-        historical_sensors
+    async_add_entities(
+        [AirNoteSensor(entry, desc) for desc in SENSOR_DESCRIPTIONS]
     )
 
-    async_add_entities(historical_sensors + text_sensors)
 
-
-class AirNoteHistoricalSensor(HistoricalSensor, SensorEntity):
-    """Numeric sensor that writes backdated readings to the HA states and statistics tables."""
-
-    entity_description: AirNoteHistoricalSensorDescription
-    _attr_has_entity_name = True
-    _attr_should_poll = False
-
-    def __init__(
-        self, entry: ConfigEntry, description: AirNoteHistoricalSensorDescription
-    ) -> None:
-        self.entity_description = description
-        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
-        self._attr_device_info = _device_info(entry)
-        self._entry_id = entry.entry_id
-        self._latest_dt: datetime | None = None
-        self._attr_native_value: float | None = None
-
-    @property
-    def state(self) -> float | None:
-        # HistoricalSensor always returns None. Override to show the most
-        # recently received measurement so the sensor card is usable.
-        return self._attr_native_value
-
-    @property
-    def statistic_id(self) -> str:
-        return f"{DOMAIN}:{self.entity_description.payload_key}"
-
-    def get_statistic_metadata(self) -> StatisticMetaData:
-        unit = self.entity_description.native_unit_of_measurement
-        meta: dict[str, Any] = {
-            "has_mean": True,
-            "has_sum": False,
-            "name": self.name,
-            "source": DOMAIN,
-            "statistic_id": self.statistic_id,
-            "unit_of_measurement": unit,
-        }
-        if StatisticMeanType is not None:
-            meta["mean_type"] = StatisticMeanType.ARITHMETIC
-        meta["unit_class"] = _UNIT_CLASS.get(unit)
-        return StatisticMetaData(**meta)
-
-    async def async_update_historical(self) -> None:
-        # Push-based integration: no polling needed.
-        pass
-
-    async def async_calculate_statistic_data(
-        self,
-        hist_states: list[HistoricalState],
-        *,
-        latest: dict | None = None,
-    ) -> list:
-        return []
-
-    def _friendly_name_internal(self) -> str | None:
-        # homeassistant_historical_sensor 2.0.0 patches.py calls this method,
-        # but it was removed in HA 2025.x. Shim it via the public .name property.
-        return self.name
-
-    async def async_push_historical_state(self, hist_state: HistoricalState) -> None:
-        """Receive one backdated reading from the webhook handler."""
-        self._attr_historical_states = [hist_state]
-        await self.async_write_ha_historical_states()
-        # Keep the displayed state in sync with the most recent measurement.
-        if self._latest_dt is None or hist_state.dt > self._latest_dt:
-            self._latest_dt = hist_state.dt
-            self._attr_native_value = hist_state.state
-            self.async_write_ha_state()
-
-
-class AirNoteTextSensor(RestoreSensor, SensorEntity):
-    """Text sensor (aqi_level) that updates in real-time via the event bus."""
-
-    entity_description: AirNoteTextSensorDescription
+class AirNoteSensor(RestoreSensor, SensorEntity):
+    entity_description: AirNoteSensorEntityDescription
     _attr_has_entity_name = True
 
     def __init__(
-        self, entry: ConfigEntry, description: AirNoteTextSensorDescription
+        self, entry: ConfigEntry, description: AirNoteSensorEntityDescription
     ) -> None:
         self.entity_description = description
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
@@ -230,5 +124,9 @@ class AirNoteTextSensor(RestoreSensor, SensorEntity):
         raw = body.get(self.entity_description.payload_key)
         if raw is None:
             return
-        self._attr_native_value = raw
+        self._attr_native_value = (
+            self.entity_description.transform(raw)
+            if self.entity_description.transform
+            else raw
+        )
         self.async_write_ha_state()
